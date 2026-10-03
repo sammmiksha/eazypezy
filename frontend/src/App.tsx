@@ -1,18 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Mic, MicOff, Truck, Star, ExternalLink, Sparkles, Filter, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Search, Mic, MicOff, Truck, Star, ExternalLink, Sparkles, TrendingDown, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { SearchResponse, ProductOut, ParsedSearchRequest } from './types';
 
 const API_BASE = "http://localhost:8000/api/v1";
 
 const PRESET_QUERIES = [
+  "iPhone 18 1TB",
+  "mujhe sabse sasta iPhone 18 1TB chahiye",
+  "Sony WH-1000XM5",
   "purple saree with golden border under 1500",
-  "violet banarasi saree under 1500 deliver in 2 days to 560034",
-  "mustard yellow georgette haldi saree under 1200",
-  "red banarasi silk saree for wedding"
+  "Nike Air Jordan 1"
 ];
 
 export default function App() {
-  const [query, setQuery] = useState("purple saree with golden border under 1500");
+  const [query, setQuery] = useState("iPhone 18 1TB");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [response, setResponse] = useState<SearchResponse | null>(null);
@@ -37,7 +38,7 @@ export default function App() {
       const data: SearchResponse = await res.json();
       setResponse(data);
     } catch (err: any) {
-      setError(err.message || "Failed to execute search. Make sure backend is running.");
+      setError(err.message || "Failed to execute search. Make sure backend is running on port 8000.");
     } finally {
       setLoading(false);
     }
@@ -81,35 +82,49 @@ export default function App() {
   };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 16px' }}>
+    <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '24px 16px' }}>
       {/* Header */}
-      <header style={{ marginBottom: '28px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <header style={{ marginBottom: '24px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h1 style={{ fontSize: '24px', fontWeight: 700, letterSpacing: '-0.02em', color: '#fff' }}>
-              EasyPezy Saree Search
-            </h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <h1 style={{ fontSize: '26px', fontWeight: 800, letterSpacing: '-0.02em', color: '#fff' }}>
+                EasyPezy
+              </h1>
+              <span style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                padding: '3px 8px',
+                borderRadius: '6px',
+                background: '#1d4ed8',
+                color: '#fff',
+                letterSpacing: '0.05em',
+                textTransform: 'uppercase'
+              }}>
+                Universal Deal Finder
+              </span>
+            </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>
-              Multilingual attribute extraction and cross-platform fulfillment ranker
+              Search anything online across all platforms in any language. Find the highest discount and best price instantly.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <span style={{
               fontSize: '12px',
-              padding: '4px 10px',
-              borderRadius: '999px',
+              padding: '6px 12px',
+              borderRadius: '8px',
               background: '#1e293b',
               border: '1px solid var(--border-subtle)',
-              color: '#38bdf8'
+              color: '#94a3b8'
             }}>
-              Phase 1 Core Slice
+              Multilingual NLP • Cross-Platform Aggregation
             </span>
           </div>
         </div>
       </header>
 
       {/* Search Input Bar */}
-      <section style={{ marginBottom: '24px' }}>
+      <section style={{ marginBottom: '20px' }}>
         <form onSubmit={(e) => { e.preventDefault(); executeSearch(query); }}>
           <div style={{
             display: 'flex',
@@ -118,15 +133,14 @@ export default function App() {
             border: '1px solid var(--border-subtle)',
             borderRadius: '12px',
             padding: '8px 12px',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-            transition: 'border-color 0.2s'
+            boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
           }}>
             <Search size={20} color="var(--text-muted)" style={{ marginRight: '10px' }} />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Speak or type (e.g. purple saree with golden border under 1500)"
+              placeholder="Search gadgets, clothing, appliances in any language (e.g. iPhone 18 1TB, sabse sasta iPhone)"
               style={{
                 flex: 1,
                 background: 'transparent',
@@ -139,11 +153,11 @@ export default function App() {
             <button
               type="button"
               onClick={handleVoiceToggle}
-              title="Voice Search"
+              title="Voice Search (Speak in any language)"
               style={{
                 padding: '8px',
                 borderRadius: '8px',
-                background: isListening ? '#dc2626' : 'rgba(255,255,255,0.05)',
+                background: isListening ? '#dc2626' : 'rgba(255,255,255,0.06)',
                 color: '#fff',
                 marginRight: '8px',
                 display: 'flex',
@@ -161,25 +175,25 @@ export default function App() {
                 color: '#fff',
                 fontWeight: 600,
                 fontSize: '14px',
-                padding: '10px 18px',
+                padding: '10px 20px',
                 borderRadius: '8px'
               }}
             >
-              {loading ? "Searching..." : "Search"}
+              {loading ? "Searching..." : "Compare Deals"}
             </button>
           </div>
         </form>
 
         {/* Preset query chips */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '12px' }}>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)', alignSelf: 'center' }}>Examples:</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', alignSelf: 'center' }}>Try queries:</span>
           {PRESET_QUERIES.map((q) => (
             <button
               key={q}
               onClick={() => { setQuery(q); executeSearch(q); }}
               style={{
                 fontSize: '12px',
-                padding: '4px 10px',
+                padding: '5px 12px',
                 borderRadius: '6px',
                 background: 'rgba(255,255,255,0.04)',
                 border: '1px solid var(--border-subtle)',
@@ -193,7 +207,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* Error State */}
+      {/* Error Banner */}
       {error && (
         <div style={{
           padding: '12px 16px',
@@ -208,45 +222,100 @@ export default function App() {
         </div>
       )}
 
-      {/* Parsed Intent Summary */}
+      {/* Best Deal Comparison Banner */}
+      {response && response.deal_comparison && (
+        <div style={{
+          background: 'linear-gradient(90deg, #1e3a8a 0%, #172554 100%)',
+          border: '1px solid #3b82f6',
+          borderRadius: '12px',
+          padding: '16px 20px',
+          marginBottom: '20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '12px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '8px',
+              background: '#2563eb',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff'
+            }}>
+              <TrendingDown size={22} />
+            </div>
+            <div>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#93c5fd', fontWeight: 700 }}>
+                Cross-Platform Price Alert
+              </span>
+              <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#fff' }}>
+                Lowest price on {response.deal_comparison.lowest_platform} at Rs. {response.deal_comparison.lowest_price.toLocaleString()}
+              </h3>
+              <p style={{ fontSize: '13px', color: '#bfdbfe' }}>
+                Found across {response.deal_comparison.total_sellers_found} platforms. You save Rs. {response.deal_comparison.max_savings.toLocaleString()} compared to highest seller.
+              </p>
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <span style={{
+              fontSize: '12px',
+              padding: '6px 12px',
+              borderRadius: '6px',
+              background: '#10b981',
+              color: '#fff',
+              fontWeight: 700
+            }}>
+              Save Rs. {response.deal_comparison.max_savings.toLocaleString()}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Extracted Parameters Bar */}
       {response && response.parsed_query && (
         <section style={{
           background: 'var(--bg-secondary)',
           border: '1px solid var(--border-subtle)',
           borderRadius: '10px',
-          padding: '16px',
+          padding: '14px 16px',
           marginBottom: '24px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>
               Extracted Parameters
             </span>
-            <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-              Vector phrase: <strong style={{ color: '#fff' }}>"{response.parsed_query.clean_search_phrase}"</strong>
-            </span>
+            <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: 'var(--text-muted)' }}>
+              <span>Language: <strong style={{ color: '#fff' }}>{response.parsed_query.detected_language.toUpperCase()}</strong></span>
+              <span>Clean search: <strong style={{ color: '#fff' }}>"{response.parsed_query.clean_search_phrase}"</strong></span>
+            </div>
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {response.parsed_query.attributes.primary_color && (
+            {response.parsed_query.attributes.brand && (
               <span style={badgeStyle}>
-                Color: <strong style={{ marginLeft: '4px', color: '#fff' }}>{response.parsed_query.attributes.primary_color}</strong>
+                Brand: <strong style={{ marginLeft: '4px', color: '#fff' }}>{response.parsed_query.attributes.brand}</strong>
               </span>
             )}
-            {response.parsed_query.attributes.zari_type && (
+            {response.parsed_query.attributes.model_name && (
               <span style={badgeStyle}>
-                Zari: <strong style={{ marginLeft: '4px', color: '#fff' }}>{response.parsed_query.attributes.zari_type}</strong>
+                Model: <strong style={{ marginLeft: '4px', color: '#fff' }}>{response.parsed_query.attributes.model_name}</strong>
               </span>
             )}
-            {response.parsed_query.attributes.border_type && (
+            {response.parsed_query.attributes.category && (
               <span style={badgeStyle}>
-                Border: <strong style={{ marginLeft: '4px', color: '#fff' }}>{response.parsed_query.attributes.border_type}</strong>
+                Category: <strong style={{ marginLeft: '4px', color: '#fff' }}>{response.parsed_query.attributes.category}</strong>
               </span>
             )}
-            {response.parsed_query.attributes.fabric && (
-              <span style={badgeStyle}>
-                Fabric: <strong style={{ marginLeft: '4px', color: '#fff' }}>{response.parsed_query.attributes.fabric}</strong>
+            {response.parsed_query.attributes.specs && Object.entries(response.parsed_query.attributes.specs).map(([k, v]) => (
+              <span key={k} style={badgeStyle}>
+                {k}: <strong style={{ marginLeft: '4px', color: '#fff' }}>{String(v)}</strong>
               </span>
-            )}
+            ))}
             {response.parsed_query.budget_max && (
               <span style={badgeStyle}>
                 Max Budget: <strong style={{ marginLeft: '4px', color: '#fff' }}>Rs. {response.parsed_query.budget_max.toLocaleString()}</strong>
@@ -257,32 +326,18 @@ export default function App() {
                 Pincode: <strong style={{ marginLeft: '4px', color: '#fff' }}>{response.parsed_query.pincode}</strong>
               </span>
             )}
-            {response.parsed_query.deadline_days && (
-              <span style={badgeStyle}>
-                Max SLA: <strong style={{ marginLeft: '4px', color: '#fff' }}>Within {response.parsed_query.deadline_days} days</strong>
-              </span>
-            )}
           </div>
-
-          {/* Clarification Chips */}
-          {response.parsed_query.clarifications_needed.length > 0 && (
-            <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '6px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-              <span style={{ fontSize: '13px', color: '#fbbf24', fontWeight: 500 }}>
-                Clarification needed: {response.parsed_query.clarifications_needed.join(", ")}
-              </span>
-            </div>
-          )}
         </section>
       )}
 
       {/* Results Header */}
       {response && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600 }}>
-            Ranked Results ({response.total_found})
+          <h2 style={{ fontSize: '18px', fontWeight: 700 }}>
+            Platforms Selling This Item ({response.total_found})
           </h2>
           <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-            Sorted by multi-factor score and delivery SLA
+            Ranked by lowest price & maximum discount
           </span>
         </div>
       )}
@@ -291,66 +346,88 @@ export default function App() {
       {response && response.results.length > 0 ? (
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
           gap: '20px'
         }}>
           {response.results.map((product) => (
             <div
-              key={product.id}
+              key={`${product.platform}-${product.id}`}
               style={{
                 background: 'var(--bg-card)',
-                border: '1px solid var(--border-subtle)',
+                border: product.is_best_deal ? '2px solid #10b981' : '1px solid var(--border-subtle)',
                 borderRadius: '12px',
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
-                transition: 'transform 0.15s, border-color 0.15s'
+                position: 'relative'
               }}
             >
-              {/* Image & Platform Tag */}
-              <div style={{ position: 'relative', height: '260px', background: '#0f172a' }}>
+              {/* Best Deal Flag Header */}
+              {product.is_best_deal && (
+                <div style={{
+                  background: '#10b981',
+                  color: '#fff',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  letterSpacing: '0.04em',
+                  padding: '4px 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <span>BEST DEAL • LOWEST PRICE</span>
+                  {product.price_difference_vs_highest ? (
+                    <span>Save Rs. {product.price_difference_vs_highest.toLocaleString()}</span>
+                  ) : null}
+                </div>
+              )}
+
+              {/* Product Image */}
+              <div style={{ position: 'relative', height: '230px', background: '#0f172a' }}>
                 <img
-                  src={product.image_urls[0] || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80'}
+                  src={product.image_urls[0] || 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=800&q=80'}
                   alt={product.title}
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
+                {/* Platform Tag */}
                 <span style={{
                   position: 'absolute',
                   top: '12px',
                   left: '12px',
                   padding: '4px 10px',
-                  background: 'rgba(15, 23, 42, 0.85)',
+                  background: 'rgba(15, 23, 42, 0.9)',
                   backdropFilter: 'blur(4px)',
                   borderRadius: '6px',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  letterSpacing: '0.04em',
+                  fontSize: '12px',
+                  fontWeight: 700,
                   color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.1)'
+                  border: '1px solid rgba(255,255,255,0.15)'
                 }}>
                   {product.platform}
                 </span>
 
-                <span style={{
-                  position: 'absolute',
-                  top: '12px',
-                  right: '12px',
-                  padding: '4px 8px',
-                  background: 'rgba(16, 185, 129, 0.9)',
-                  borderRadius: '6px',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  color: '#fff'
-                }}>
-                  {Math.round(product.match_score * 100)}% Match
-                </span>
+                {product.discount_percent > 0 && (
+                  <span style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    padding: '4px 8px',
+                    background: '#e11d48',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    color: '#fff'
+                  }}>
+                    {Math.round(product.discount_percent)}% OFF
+                  </span>
+                )}
               </div>
 
-              {/* Content */}
+              {/* Details */}
               <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
                   <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>
-                    {product.brand || product.seller}
+                    Seller: {product.seller || product.brand}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <Star size={13} fill="#f59e0b" color="#f59e0b" />
@@ -372,24 +449,39 @@ export default function App() {
                   {product.title}
                 </h3>
 
-                {/* Price and MRP */}
+                {/* Price Display */}
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '18px', fontWeight: 700, color: '#fff' }}>
+                  <span style={{ fontSize: '20px', fontWeight: 800, color: '#fff' }}>
                     Rs. {product.price.toLocaleString()}
                   </span>
                   {product.mrp && product.mrp > product.price && (
-                    <>
-                      <span style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
-                        Rs. {product.mrp.toLocaleString()}
-                      </span>
-                      <span style={{ fontSize: '12px', color: 'var(--accent-green)', fontWeight: 600 }}>
-                        {Math.round(((product.mrp - product.price) / product.mrp) * 100)}% off
-                      </span>
-                    </>
+                    <span style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+                      Rs. {product.mrp.toLocaleString()}
+                    </span>
                   )}
                 </div>
 
-                {/* Delivery Badge */}
+                {/* Specs Chips */}
+                {product.specs && Object.keys(product.specs).length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                    {Object.entries(product.specs).map(([key, val]) => (
+                      <span
+                        key={key}
+                        style={{
+                          fontSize: '11px',
+                          padding: '2px 6px',
+                          background: 'rgba(255,255,255,0.05)',
+                          borderRadius: '4px',
+                          color: '#94a3b8'
+                        }}
+                      >
+                        {key}: <strong style={{ color: '#e2e8f0' }}>{String(val)}</strong>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Delivery SLA */}
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -399,33 +491,33 @@ export default function App() {
                   border: '1px solid var(--border-subtle)',
                   borderRadius: '6px',
                   fontSize: '12px',
-                  marginBottom: '14px'
+                  marginBottom: '12px'
                 }}>
                   <Truck size={14} color="#38bdf8" />
                   <span>
-                    Estimated: <strong style={{ color: '#fff' }}>{product.estimated_delivery_days} days</strong> ({product.delivery_status})
+                    Delivery: <strong style={{ color: '#fff' }}>{product.estimated_delivery_days} days</strong> ({product.delivery_status})
                   </span>
                 </div>
 
                 {/* Why This Matched Box */}
                 <div style={{
-                  background: 'rgba(59, 130, 246, 0.08)',
-                  border: '1px solid rgba(59, 130, 246, 0.25)',
+                  background: product.is_best_deal ? 'rgba(16, 185, 129, 0.08)' : 'rgba(59, 130, 246, 0.08)',
+                  border: product.is_best_deal ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid rgba(59, 130, 246, 0.25)',
                   borderRadius: '8px',
                   padding: '10px 12px',
                   fontSize: '12px',
-                  color: '#bfdbfe',
+                  color: product.is_best_deal ? '#a7f3d0' : '#bfdbfe',
                   marginBottom: '16px',
                   flex: 1
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', fontWeight: 600, color: '#60a5fa' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px', fontWeight: 600, color: product.is_best_deal ? '#34d399' : '#60a5fa' }}>
                     <Sparkles size={12} />
-                    <span>Why this matched</span>
+                    <span>Price & Match Breakdown</span>
                   </div>
                   <p style={{ lineHeight: '1.4' }}>{product.why_matched}</p>
                 </div>
 
-                {/* CTA Button */}
+                {/* Outbound Link to Store */}
                 <a
                   href={product.product_url}
                   target="_blank"
@@ -437,16 +529,16 @@ export default function App() {
                     gap: '6px',
                     padding: '10px',
                     borderRadius: '8px',
-                    background: '#1e293b',
+                    background: product.is_best_deal ? '#10b981' : '#1e293b',
                     border: '1px solid var(--border-subtle)',
                     color: '#fff',
                     fontSize: '13px',
-                    fontWeight: 600,
+                    fontWeight: 700,
                     textAlign: 'center',
                     transition: 'background 0.15s'
                   }}
                 >
-                  <span>View on {product.platform}</span>
+                  <span>Buy on {product.platform}</span>
                   <ExternalLink size={14} />
                 </a>
               </div>
@@ -462,7 +554,7 @@ export default function App() {
           border: '1px solid var(--border-subtle)'
         }}>
           <p style={{ color: 'var(--text-muted)', fontSize: '15px' }}>
-            No sarees survived the filters for this criteria. Try relaxing budget or delivery constraints.
+            No platforms found for this item with the current filters.
           </p>
         </div>
       ) : null}

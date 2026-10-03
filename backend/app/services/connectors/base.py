@@ -1,7 +1,7 @@
 """Base connector interface for e-commerce platforms."""
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
-from app.schemas.search import SareeQueryAttributes
+from app.schemas.search import ExtractedAttributes
 
 class BasePlatformConnector(ABC):
     """Abstract connector. Adding a new platform means implementing this class."""
@@ -13,7 +13,7 @@ class BasePlatformConnector(ABC):
     async def search(
         self,
         query: str,
-        attributes: SareeQueryAttributes,
+        attributes: ExtractedAttributes,
         max_budget: Optional[float] = None
     ) -> List[Dict[str, Any]]:
         """Query platform catalog or affiliate feed for products."""

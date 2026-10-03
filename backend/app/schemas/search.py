@@ -1,26 +1,25 @@
-"""Pydantic schemas for search query, extracted attributes, and results."""
+"""Pydantic schemas for universal multilingual product search, attribute extraction, and price comparison."""
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 
-class SareeQueryAttributes(BaseModel):
-    primary_color: Optional[str] = Field(None, description="Dominant color, e.g. purple, teal, red")
-    secondary_color: Optional[str] = Field(None, description="Accent/border color, e.g. golden, silver")
-    border_type: Optional[str] = Field(None, description="Border style: zari, temple, contrast, embroidered, etc.")
-    zari_type: Optional[str] = Field(None, description="Zari finish: golden, silver, copper, antique, etc.")
-    finish: Optional[str] = Field(None, description="Finish/luster: matte, glossy, sheer, etc.")
-    fabric: Optional[str] = Field(None, description="Fabric: silk, kanjivaram, banarasi, georgette, chiffon, cotton, etc.")
-    occasion: Optional[str] = Field(None, description="Occasion: wedding, festive, party, casual, etc.")
+class ExtractedAttributes(BaseModel):
+    category: Optional[str] = Field(None, description="e.g. smartphones, electronics, clothing, footwear, appliances")
+    brand: Optional[str] = Field(None, description="e.g. Apple, Samsung, Sony, Nike, Suta")
+    model_name: Optional[str] = Field(None, description="e.g. iPhone 18, WH-1000XM5, Air Jordan")
+    specs: Dict[str, Any] = Field(default_factory=dict, description="e.g. {'storage': '1TB', 'ram': '16GB', 'fabric': 'silk'}")
+    color: Optional[str] = Field(None, description="e.g. titanium black, purple, midnight blue")
 
 class ParsedSearchRequest(BaseModel):
     raw_query: str
     detected_language: str = "en"
     translated_query: str
     clean_search_phrase: str
-    attributes: SareeQueryAttributes
+    attributes: ExtractedAttributes
     budget_min: Optional[float] = None
     budget_max: Optional[float] = None
     deadline_days: Optional[int] = None
     pincode: Optional[str] = None
+    sort_by: str = "discount"  # "discount", "price_asc", "relevance"
     clarifications_needed: List[str] = []
 
 class SearchRequest(BaseModel):
@@ -28,12 +27,14 @@ class SearchRequest(BaseModel):
     pincode: Optional[str] = None
     deadline_days: Optional[int] = None
     budget_max: Optional[float] = None
+    sort_by: Optional[str] = "discount"
 
 class ProductOut(BaseModel):
     id: str
     platform: str
     platform_product_id: str
     title: str
+    category: str
     description: Optional[str] = None
     brand: Optional[str] = None
     seller: Optional[str] = None
@@ -41,27 +42,31 @@ class ProductOut(BaseModel):
     image_urls: List[str]
     price: float
     mrp: Optional[float] = None
+    discount_percent: float = 0.0
     currency: str = "INR"
-    
-    primary_color: Optional[str] = None
-    secondary_color: Optional[str] = None
-    border_type: Optional[str] = None
-    zari_type: Optional[str] = None
-    finish: Optional[str] = None
-    fabric: Optional[str] = None
-    occasion: Optional[str] = None
+    specs: Dict[str, Any] = {}
     
     in_stock: bool
     rating: float
     rating_count: int
     
-    # Fulfillment & Search Match Metadata
     estimated_delivery_days: Optional[int] = None
-    delivery_status: str  # "confirmed", "estimated", "unverified", "not_serviceable"
+    delivery_status: str
     match_score: float
+    is_best_deal: bool = False
+    price_difference_vs_highest: Optional[float] = None
     why_matched: str
+
+class PlatformDealComparison(BaseModel):
+    product_group: str
+    lowest_platform: str
+    lowest_price: float
+    highest_price: float
+    max_savings: float
+    total_sellers_found: int
 
 class SearchResponse(BaseModel):
     parsed_query: ParsedSearchRequest
     total_found: int
+    deal_comparison: Optional[PlatformDealComparison] = None
     results: List[ProductOut]

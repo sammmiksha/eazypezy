@@ -1,7 +1,7 @@
-"""SQLAlchemy Product and Delivery Models."""
+"""SQLAlchemy Universal Product and Delivery Models."""
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Numeric, Boolean, Integer, DateTime, Text, JSON
+from sqlalchemy import Column, String, Numeric, Boolean, Integer, DateTime, Text, JSON, Float
 from app.core.database import Base
 
 class Product(Base):
@@ -11,8 +11,9 @@ class Product(Base):
     platform = Column(String(50), nullable=False, index=True)
     platform_product_id = Column(String(100), nullable=False)
     title = Column(Text, nullable=False)
+    category = Column(String(100), nullable=False, default="general", index=True)
     description = Column(Text, nullable=True)
-    brand = Column(String(100), nullable=True)
+    brand = Column(String(100), nullable=True, index=True)
     seller = Column(String(100), nullable=True)
     product_url = Column(Text, nullable=False)
     image_urls = Column(JSON, nullable=False, default=list)
@@ -20,20 +21,11 @@ class Product(Base):
     # Pricing
     price = Column(Numeric(10, 2), nullable=False, index=True)
     mrp = Column(Numeric(10, 2), nullable=True)
+    discount_percent = Column(Float, default=0.0)
     currency = Column(String(3), default="INR")
 
-    # Saree Attributes
-    primary_color = Column(String(50), nullable=True, index=True)
-    secondary_color = Column(String(50), nullable=True)
-    border_type = Column(String(50), nullable=True)   # 'zari', 'temple', 'contrast', 'embroidered'
-    zari_type = Column(String(50), nullable=True)     # 'golden', 'silver', 'copper', 'antique'
-    finish = Column(String(50), nullable=True)        # 'matte', 'glossy', 'sheer'
-    fabric = Column(String(50), nullable=True, index=True)  # 'silk', 'kanjivaram', 'banarasi', 'georgette', 'chiffon'
-    occasion = Column(String(50), nullable=True)
-
-    # Embeddings (Stored as JSON array for cross-DB compatibility, or native vector in Postgres)
-    text_embedding = Column(JSON, nullable=True)
-    image_embedding = Column(JSON, nullable=True)
+    # Flexible specs dictionary (e.g. storage, ram, color, size, fabric, processor, etc.)
+    specs = Column(JSON, default=dict)
 
     # Fulfillment & Social proof
     in_stock = Column(Boolean, default=True, index=True)

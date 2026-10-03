@@ -1,25 +1,25 @@
-"""Search API endpoint orchestrating parser, connectors, filters, and ranker."""
-from fastapi import APIRouter, Query, HTTPException, Depends
-from typing import Optional, List
+"""Universal search API endpoint orchestrating multilingual parsing, multi-platform search, and deal ranking."""
+from fastapi import APIRouter, HTTPException
+from typing import List, Dict, Any
 from app.schemas.search import SearchResponse, SearchRequest, ProductOut, ParsedSearchRequest
 from app.services.parser.extractor import extract_search_intent
-from app.services.connectors.mock_catalog import MockCatalogConnector
+from app.services.connectors.mock_catalog import UniversalCatalogConnector
 from app.services.delivery.checker import DeliveryChecker
-from app.services.ranker.scorer import ProductRanker
+from app.services.ranker.scorer import UniversalRanker
 
 router = APIRouter()
-catalog_connector = MockCatalogConnector()
+catalog_connector = UniversalCatalogConnector()
 
 @router.post("/search", response_model=SearchResponse)
-async def search_sarees(payload: SearchRequest):
-    """Orchestrates query parsing, platform search, hard filters, delivery checks, and ranking."""
+async def search_products(payload: SearchRequest):
+    """Universal search across gadgets, fashion, appliances, etc. with cross-platform best discount ranking."""
     if not payload.query or not payload.query.strip():
         raise HTTPException(status_code=400, detail="Search query cannot be empty")
 
-    # Step 1: LLM attribute & intent extraction
+    # Step 1: Multilingual extraction of intent, brand, model, specifications, and budget
     parsed: ParsedSearchRequest = await extract_search_intent(payload.query)
 
-    # Apply any explicit query overrides passed in the payload
+    # Apply any explicit overrides
     if payload.pincode:
         parsed.pincode = payload.pincode
     if payload.deadline_days:
@@ -27,29 +27,26 @@ async def search_sarees(payload: SearchRequest):
     if payload.budget_max:
         parsed.budget_max = payload.budget_max
 
-    # Step 2: Query product sources via connector
+    # Step 2: Query multi-platform catalog
     raw_products = await catalog_connector.search(
         query=parsed.clean_search_phrase,
         attributes=parsed.attributes,
         max_budget=parsed.budget_max
     )
 
-    # Step 3: Hard filters & Delivery evaluation
-    survivors: List[ProductOut] = []
+    # Step 3: Hard filters & SLA evaluation
+    survivors: List[Dict[str, Any]] = []
     
     for raw in raw_products:
-        # Stock filter
         if not raw.get("in_stock", True):
             continue
 
-        # Budget hard filter (if budget_min is specified)
         price = float(raw["price"])
         if parsed.budget_min and price < parsed.budget_min:
             continue
         if parsed.budget_max and price > parsed.budget_max:
             continue
 
-        # Serviceability & Deadline check
         serviceability = await catalog_connector.check_serviceability(
             pincode=parsed.pincode or "",
             product_id=raw["platform_product_id"]
@@ -61,56 +58,20 @@ async def search_sarees(payload: SearchRequest):
             platform_serviceability=serviceability
         )
 
-        # If user explicitly requested a deadline and item cannot meet it, filter out
         if not delivery_eval["is_deliverable_by_deadline"]:
             continue
 
-        item_for_scoring = dict(raw)
-        item_for_scoring["estimated_delivery_days"] = delivery_eval["estimated_delivery_days"]
+        item_ready = dict(raw)
+        item_ready["estimated_delivery_days"] = delivery_eval["estimated_delivery_days"]
+        item_ready["delivery_status"] = delivery_eval["delivery_status"]
+        survivors.append(item_ready)
 
-        # Step 4: Multi-factor ranking & match reason generation
-        score, why_matched = ProductRanker.score_product(item_for_scoring, parsed)
-
-        product_out = ProductOut(
-            id=raw.get("platform_product_id", ""),
-            platform=raw["platform"],
-            platform_product_id=raw["platform_product_id"],
-            title=raw["title"],
-            description=raw.get("description"),
-            brand=raw.get("brand"),
-            seller=raw.get("seller"),
-            product_url=raw["product_url"],
-            image_urls=raw["image_urls"],
-            price=price,
-            mrp=raw.get("mrp"),
-            currency=raw.get("currency", "INR"),
-            primary_color=raw.get("primary_color"),
-            secondary_color=raw.get("secondary_color"),
-            border_type=raw.get("border_type"),
-            zari_type=raw.get("zari_type"),
-            finish=raw.get("finish"),
-            fabric=raw.get("fabric"),
-            occasion=raw.get("occasion"),
-            in_stock=raw.get("in_stock", True),
-            rating=raw.get("rating", 4.0),
-            rating_count=raw.get("rating_count", 0),
-            estimated_delivery_days=delivery_eval["estimated_delivery_days"],
-            delivery_status=delivery_eval["delivery_status"],
-            match_score=score,
-            why_matched=why_matched
-        )
-        survivors.append(product_out)
-
-    # Sort survivors by match_score descending
-    survivors.sort(key=lambda p: p.match_score, reverse=True)
+    # Step 4: Multi-platform cross-comparison and discount ranking
+    ranked_products, deal_comparison = UniversalRanker.process_and_rank_products(survivors, parsed)
 
     return SearchResponse(
         parsed_query=parsed,
-        total_found=len(survivors),
-        results=survivors
+        total_found=len(ranked_products),
+        deal_comparison=deal_comparison,
+        results=ranked_products
     )
-
-@router.get("/parse-only", response_model=ParsedSearchRequest)
-async def parse_query_only(q: str = Query(..., description="Shopping query string")):
-    """Helper endpoint to view LLM extraction results directly."""
-    return await extract_search_intent(q)
