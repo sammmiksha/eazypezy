@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: easypezy_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: easypezy
+      POSTGRES_PASSWORD: easypezypassword
+      POSTGRES_DB: easypezy_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U easypezy -d easypezy_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: easypezy_redis
+    restart: always
+    ports:
+      - "6380:6379"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: easypezy_backend
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://easypezy:easypezypassword@db:5432/easypezy_db
+      REDIS_URL: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
