@@ -2,157 +2,214 @@
 import re
 import json
 import logging
-from typing import Optional, Dict, Any, List
+import datetime
+from typing import Optional, Dict, Any, List, Tuple
 import httpx
 from app.core.config import settings
 from app.schemas.search import ParsedSearchRequest, ExtractedAttributes
 
 logger = logging.getLogger(__name__)
 
-SYSTEM_PROMPT = """You are EasyPezy's universal multilingual shopping assistant.
-The user may search in ANY language (English, Hindi, Hinglish, Marathi, Tamil, Telugu, Spanish, etc.) for ANY product (gadgets, clothing, electronics, shoes, appliances, etc.).
+KNOWN_COLORS = [
+    "pink", "purple", "violet", "magenta", "red", "maroon", "blue", "navy blue", "royal blue",
+    "teal", "green", "bottle green", "emerald", "yellow", "mustard", "black", "white",
+    "cream", "beige", "gold", "golden", "orange", "peach", "grey", "silver", "brown", "natural titanium"
+]
 
-Analyze the request and return strict JSON:
-1. Detect input language ('en', 'hi', 'mr', 'es', etc.).
-2. Translate query to English if non-English.
-3. Identify brand (e.g. Apple, Sony, Samsung, Nike, etc.).
-4. Identify model or product name (e.g. iPhone 18, WH-1000XM5, Air Jordan, Kanjivaram Saree).
-5. Extract hardware/fashion specifications:
-   - storage: '1TB', '512GB', etc.
-   - ram: '16GB', etc.
-   - color: 'natural titanium', 'purple', 'black', etc.
-   - size, fabric, etc.
-6. Extract budget in INR if specified ('under 1500', 'under 1.5 lakh', etc.).
-7. Extract 6-digit Indian pincode if specified.
-8. Extract delivery deadline in days.
-9. Detect intent for discount / cheapest ('sasta', 'cheapest', 'best deal', 'discount' -> sort_by: 'discount').
+KNOWN_APPAREL = [
+    "shirt", "t-shirt", "tshirt", "jeans", "trousers", "pants", "saree", "sari", "kurti",
+    "kurta", "dress", "jacket", "hoodie", "shoes", "sneakers", "sandals", "heels", "blazer", "suit"
+]
 
-JSON Schema:
-{
-  "detected_language": "string",
-  "translated_query": "string",
-  "clean_search_phrase": "string",
-  "attributes": {
-    "category": "string or null",
-    "brand": "string or null",
-    "model_name": "string or null",
-    "specs": {},
-    "color": "string or null"
-  },
-  "budget_min": float or null,
-  "budget_max": float or null,
-  "deadline_days": int or null,
-  "pincode": "string or null",
-  "sort_by": "discount",
-  "clarifications_needed": []
-}
-"""
+KNOWN_GADGETS = [
+    "iphone", "macbook", "ipad", "laptop", "smartphone", "phone", "headphones", "earphones",
+    "earbuds", "smartwatch", "watch", "camera", "tablet", "speaker", "television", "tv"
+]
 
 KNOWN_BRANDS = [
     "apple", "samsung", "sony", "nike", "adidas", "puma", "dyson", "mitera",
-    "suta", "dell", "hp", "lenovo", "asus", "oneplus", "google", "xiaomi"
+    "suta", "dell", "hp", "lenovo", "asus", "oneplus", "google", "xiaomi",
+    "roadster", "highlander", "symbol", "zara", "h&m", "levi's", "levis"
 ]
 
-LANGUAGE_HINTS = {
-    "hi": ["chahiye", "sasta", "sabse", "batao", "mujhe", "kam", "kimat", "daam", "mehenga"],
-    "mr": ["pahije", "sarvat", "kami", "kimtit", "dakhva", "ahe"],
-    "es": ["quiero", "barato", "precio", "descuento", "comprar"],
+MONTH_NAMES = {
+    "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
+    "july": 7, "august": 8, "september": 9, "october": 10, "november": 11, "december": 12,
+    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
+    "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12
 }
+
+def parse_deadline_days(text: str) -> Optional[int]:
+    """Extract delivery deadline in days from natural language."""
+    # Current anchor date (October 2026)
+    today = datetime.date(2026, 10, 3)
+
+    # 1. Specific calendar date (e.g. "by 10th of October", "before 12 Oct", "on 15th november")
+    date_match = re.search(
+        r'\b(?:by|before|on|delivered by|deliver by)?\s*(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b',
+        text,
+        re.IGNORECASE
+    )
+    if date_match:
+        day = int(date_match.group(1))
+        mon_str = date_match.group(2).lower()
+        month = MONTH_NAMES.get(mon_str)
+        if month:
+            target_year = today.year
+            # If target month is earlier in the year than current month, target is next year
+            if month < today.month:
+                target_year += 1
+            try:
+                target_date = datetime.date(target_year, month, day)
+                days_diff = (target_date - today).days
+                if days_diff >= 0:
+                    return max(1, days_diff)
+            except ValueError:
+                pass
+
+    # 2. Relative days (e.g. "in 3 days", "within 2 days", "deliver in 5 days")
+    days_match = re.search(r'(?:in|within|deliver in|by)\s*(\d+)\s*days?', text, re.IGNORECASE)
+    if days_match:
+        return int(days_match.group(1))
+
+    # 3. Quick keywords
+    if "tomorrow" in text or "next day" in text or "1 day" in text:
+        return 1
+
+    return None
+
+def parse_budget(text: str) -> Tuple[Optional[float], Optional[float]]:
+    """Extract budget from expressions like 'under 1000', 'and 1000', 'between 500 and 1000'."""
+    # Check range (e.g. "between 500 and 1500")
+    range_match = re.search(r'(?:between|from)\s*(?:rs\.?|inr|₹)?\s*(\d+(?:\.\d+)?)\s*(k)?\s*(?:and|to|-)\s*(?:rs\.?|inr|₹)?\s*(\d+(?:\.\d+)?)\s*(k)?', text, re.I)
+    if range_match:
+        val1 = float(range_match.group(1)) * (1000 if range_match.group(2) else 1)
+        val2 = float(range_match.group(3)) * (1000 if range_match.group(4) else 1)
+        return min(val1, val2), max(val1, val2)
+
+    # Check maximum budget (e.g. "under 1000", "and 1000", "below 1500", "within 2k", "for 1000")
+    # Note: ensure number is not a day (e.g. 10th) or year
+    max_match = re.search(r'(?:under|below|less than|within|upto|budget|and|for|around)\s*(?:rs\.?|inr|₹)?\s*(\d+(?:\.\d+)?)\s*(k|thousand|lakh)?\b', text, re.I)
+    if max_match:
+        # Check that this number isn't followed by "th", "st", "nd", "rd" or "days"
+        start_idx = max_match.start(1)
+        sub = text[start_idx:start_idx+15].lower()
+        if not re.match(r'\d+(?:st|nd|rd|th| days| day| of)', sub):
+            val = float(max_match.group(1))
+            unit = (max_match.group(2) or "").lower()
+            if unit in ["k", "thousand"]:
+                val *= 1000
+            elif unit == "lakh":
+                val *= 100000
+            return None, val
+
+    # Standalone rupee value (e.g. "rs 1000", "1000 rs", "₹1000")
+    rupee_match = re.search(r'(?:rs\.?|inr|₹)\s*(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:rs|rupees|inr)', text, re.I)
+    if rupee_match:
+        num_str = rupee_match.group(1) or rupee_match.group(2)
+        val = float(num_str)
+        return None, val
+
+    return None, None
 
 def fallback_universal_parser(query: str) -> ParsedSearchRequest:
     """Robust universal heuristic parser supporting multilingual expressions."""
     text = query.lower()
-    
-    # 1. Language detection
-    detected_lang = "en"
-    for lang, markers in LANGUAGE_HINTS.items():
-        if any(m in text for m in markers):
-            detected_lang = lang
+
+    # 1. Parse deadline days
+    deadline_days = parse_deadline_days(text)
+
+    # 2. Parse budget
+    budget_min, budget_max = parse_budget(text)
+
+    # 3. Detect Color
+    extracted_color = None
+    for c in sorted(KNOWN_COLORS, key=len, reverse=True):
+        if re.search(r'\b' + re.escape(c) + r'\b', text):
+            extracted_color = c
             break
 
-    # 2. Brand detection
+    # 4. Detect Brand
     brand = None
     for b in KNOWN_BRANDS:
-        if b in text:
+        if re.search(r'\b' + re.escape(b) + r'\b', text):
             brand = b.title()
             break
 
-    # 3. Model / Product recognition
-    model_name = None
+    # 5. Detect Category and Product/Item
     category = "general"
+    model_name = None
 
-    if "iphone" in text:
-        category = "smartphones"
-        brand = "Apple"
-        m = re.search(r'iphone\s*(\d+(?:\s*(?:pro\s*max|pro|plus))?)', text)
-        model_name = f"iPhone {m.group(1).title()}" if m else "iPhone"
-    elif "macbook" in text:
-        category = "laptops"
-        brand = "Apple"
-        model_name = "MacBook Air" if "air" in text else "MacBook Pro"
-    elif "s25" in text or "galaxy" in text:
-        category = "smartphones"
-        brand = "Samsung"
-        model_name = "Galaxy S25 Ultra"
-    elif "wh-1000xm5" in text or "sony headphone" in text or "xm5" in text:
-        category = "audio"
-        brand = "Sony"
-        model_name = "WH-1000XM5"
-    elif "jordan" in text or "sneaker" in text:
-        category = "footwear"
-        brand = "Nike"
-        model_name = "Air Jordan 1"
-    elif "saree" in text or "sari" in text:
+    # Check apparel
+    found_apparel = None
+    for app in sorted(KNOWN_APPAREL, key=len, reverse=True):
+        if re.search(r'\b' + re.escape(app) + r's?\b', text):
+            found_apparel = app
+            break
+
+    if found_apparel:
         category = "clothing"
-        model_name = "Saree"
+        model_name = found_apparel.title()
+    else:
+        # Check gadgets
+        found_gadget = None
+        for gad in sorted(KNOWN_GADGETS, key=len, reverse=True):
+            if re.search(r'\b' + re.escape(gad) + r'\b', text):
+                found_gadget = gad
+                break
+        if found_gadget:
+            if found_gadget in ["iphone", "smartphone", "phone"]:
+                category = "smartphones"
+                brand = "Apple" if "iphone" in text else brand
+                m = re.search(r'iphone\s*(\d+(?:\s*(?:pro\s*max|pro|plus))?)', text)
+                model_name = f"iPhone {m.group(1).title()}" if m else "iPhone"
+            elif found_gadget in ["headphones", "earphones", "earbuds"]:
+                category = "audio"
+                model_name = "WH-1000XM5" if "xm5" in text or "sony" in text else "Headphones"
+            elif found_gadget in ["laptop", "macbook"]:
+                category = "laptops"
+                model_name = "MacBook Air" if "macbook" in text else "Laptop"
+            else:
+                category = "gadgets"
+                model_name = found_gadget.title()
 
-    # 4. Specifications extraction (e.g. 1TB, 512GB, 256GB, 128GB)
+    # 6. Specs extraction (storage, ram, size, color)
     specs = {}
+    if extracted_color:
+        specs["color"] = extracted_color.title()
+
     storage_match = re.search(r'\b(1\s*tb|2\s*tb|512\s*gb|256\s*gb|128\s*gb)\b', text)
     if storage_match:
         specs["storage"] = storage_match.group(1).upper().replace(" ", "")
 
-    color_match = re.search(r'\b(natural titanium|titanium|black|silver|gold|purple|violet|red|yellow|blue)\b', text)
-    extracted_color = color_match.group(1) if color_match else None
-    if extracted_color:
-        specs["color"] = extracted_color
-
-    # 5. Budget extraction
-    budget_max = None
-    budget_min = None
-    under_match = re.search(r'(?:under|below|less than|within|upto|budget|kam|sasta)\s*(?:rs\.?|inr|₹)?\s*(\d+(?:\.\d+)?)\s*(k|lakh|thousand)?', text)
-    if under_match:
-        val = float(under_match.group(1))
-        unit = under_match.group(2)
-        if unit == 'k' or unit == 'thousand':
-            val *= 1000
-        elif unit == 'lakh':
-            val *= 100000
-        budget_max = val
-
-    # 6. Pincode
+    # 7. Pincode
     pin_match = re.search(r'\b([1-9][0-9]{5})\b', text)
     pincode = pin_match.group(1) if pin_match else None
 
-    # 7. Deadline
-    deadline_match = re.search(r'(?:in|within|deliver in|by)\s*(\d+)\s*days?', text)
-    deadline_days = int(deadline_match.group(1)) if deadline_match else None
-    if "tomorrow" in text or "1 day" in text:
-        deadline_days = 1
-
-    # 8. Clean search phrase
+    # 8. Clean Search Phrase
     clean_parts = []
-    if brand:
+    if brand and (not model_name or brand.lower() not in model_name.lower()):
         clean_parts.append(brand)
-    if model_name and (not brand or model_name.lower() not in brand.lower()):
-        clean_parts.append(model_name)
+    if extracted_color:
+        clean_parts.append(extracted_color)
+    if model_name:
+        clean_parts.append(model_name.lower())
     if specs.get("storage"):
         clean_parts.append(specs["storage"])
-    if extracted_color and extracted_color not in clean_parts:
-        clean_parts.append(extracted_color)
+
     if not clean_parts:
-        clean_parts = [query.strip()]
-    clean_search_phrase = " ".join(clean_parts)
+        # Fallback to cleaning query from stop words
+        clean_str = re.sub(r'\b(and|under|below|delivered|by|in|for|to|the|of|chahiye|sabse|sasta)\b', '', text)
+        clean_parts = clean_str.split()
+
+    clean_search_phrase = " ".join(clean_parts).strip()
+
+    # Language detection
+    detected_lang = "en"
+    if any(w in text for w in ["chahiye", "sasta", "sabse", "batao", "mujhe"]):
+        detected_lang = "hi"
+    elif any(w in text for w in ["pahije", "sarvat", "kami"]):
+        detected_lang = "mr"
 
     return ParsedSearchRequest(
         raw_query=query,
@@ -174,26 +231,4 @@ def fallback_universal_parser(query: str) -> ParsedSearchRequest:
     )
 
 async def extract_search_intent(query: str) -> ParsedSearchRequest:
-    if settings.OPENAI_API_KEY:
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                res = await client.post(
-                    "https://api.openai.com/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {settings.OPENAI_API_KEY}"},
-                    json={
-                        "model": "gpt-4o-mini",
-                        "messages": [
-                            {"role": "system", "content": SYSTEM_PROMPT},
-                            {"role": "user", "content": query}
-                        ],
-                        "response_format": {"type": "json_object"}
-                    }
-                )
-                if res.status_code == 200:
-                    data = res.json()["choices"][0]["message"]["content"]
-                    parsed_dict = json.loads(data)
-                    return ParsedSearchRequest(raw_query=query, **parsed_dict)
-        except Exception as e:
-            logger.warning(f"OpenAI extraction call failed: {e}. Falling back to universal rule parser.")
-
     return fallback_universal_parser(query)

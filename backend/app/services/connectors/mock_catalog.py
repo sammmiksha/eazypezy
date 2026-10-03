@@ -1,10 +1,11 @@
-"""Universal catalog connector aggregating deals across Amazon, Flipkart, Croma, Reliance Digital, Myntra, Ajio, and Meesho."""
+"""Universal multi-platform catalog connector aggregating deals across Amazon, Flipkart, Myntra, Ajio, Meesho, Croma, and Reliance Digital."""
+import uuid
 from typing import List, Dict, Any, Optional
 from app.services.connectors.base import BasePlatformConnector
 from app.schemas.search import ExtractedAttributes
 
 UNIVERSAL_CATALOG: List[Dict[str, Any]] = [
-    # --- SMARTPHONES & GADGETS: iPhone 18 1TB Multi-Platform Deal Comparison ---
+    # --- SMARTPHONES: iPhone 18 1TB ---
     {
         "platform": "Flipkart",
         "platform_product_id": "FLK-IPH18-1TB",
@@ -18,7 +19,7 @@ UNIVERSAL_CATALOG: List[Dict[str, Any]] = [
         ],
         "price": 159999.0,
         "mrp": 179900.0,
-        "specs": {"storage": "1TB", "ram": "12GB", "color": "Natural Titanium", "display": "6.9 inch OLED", "chip": "A19 Pro"},
+        "specs": {"storage": "1TB", "ram": "12GB", "color": "Natural Titanium", "chip": "A19 Pro"},
         "in_stock": True,
         "rating": 4.8,
         "rating_count": 3410,
@@ -37,7 +38,7 @@ UNIVERSAL_CATALOG: List[Dict[str, Any]] = [
         ],
         "price": 162490.0,
         "mrp": 179900.0,
-        "specs": {"storage": "1TB", "ram": "12GB", "color": "Natural Titanium", "display": "6.9 inch OLED", "chip": "A19 Pro"},
+        "specs": {"storage": "1TB", "ram": "12GB", "color": "Natural Titanium", "chip": "A19 Pro"},
         "in_stock": True,
         "rating": 4.7,
         "rating_count": 890,
@@ -56,7 +57,7 @@ UNIVERSAL_CATALOG: List[Dict[str, Any]] = [
         ],
         "price": 164900.0,
         "mrp": 179900.0,
-        "specs": {"storage": "1TB", "ram": "12GB", "color": "Natural Titanium", "display": "6.9 inch OLED", "chip": "A19 Pro"},
+        "specs": {"storage": "1TB", "ram": "12GB", "color": "Natural Titanium", "chip": "A19 Pro"},
         "in_stock": True,
         "rating": 4.8,
         "rating_count": 5120,
@@ -75,14 +76,111 @@ UNIVERSAL_CATALOG: List[Dict[str, Any]] = [
         ],
         "price": 167900.0,
         "mrp": 179900.0,
-        "specs": {"storage": "1TB", "ram": "12GB", "color": "Natural Titanium", "display": "6.9 inch OLED", "chip": "A19 Pro"},
+        "specs": {"storage": "1TB", "ram": "12GB", "color": "Natural Titanium", "chip": "A19 Pro"},
         "in_stock": True,
         "rating": 4.6,
         "rating_count": 420,
         "delivery_days_standard": 2
     },
 
-    # --- SONY HEADPHONES ---
+    # --- CLOTHING: SHIRTS (e.g. Pink Shirts across platforms under 1000) ---
+    {
+        "platform": "Ajio",
+        "platform_product_id": "AJI-SHIRT-PNK01",
+        "title": "The Indian Garage Co Men Pink Slim Fit Pure Cotton Casual Shirt",
+        "category": "clothing",
+        "brand": "The Indian Garage Co",
+        "seller": "Reliance Retail",
+        "product_url": "https://www.ajio.com/the-indian-garage-co-men-pink-shirt/p/882190",
+        "image_urls": [
+            "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80"
+        ],
+        "price": 549.0,
+        "mrp": 1799.0,
+        "specs": {"color": "Pink", "fabric": "100% Cotton", "fit": "Slim Fit", "sleeves": "Full Sleeves"},
+        "in_stock": True,
+        "rating": 4.4,
+        "rating_count": 1820,
+        "delivery_days_standard": 2
+    },
+    {
+        "platform": "Flipkart",
+        "platform_product_id": "FLK-SHIRT-PNK02",
+        "title": "Highlander Men Pink Casual Spread Collar Pure Cotton Shirt",
+        "category": "clothing",
+        "brand": "Highlander",
+        "seller": "FlashRetails",
+        "product_url": "https://www.flipkart.com/highlander-men-pink-casual-shirt/p/itm998124",
+        "image_urls": [
+            "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80"
+        ],
+        "price": 599.0,
+        "mrp": 1299.0,
+        "specs": {"color": "Pink", "fabric": "Pure Cotton", "fit": "Regular Fit", "sleeves": "Full Sleeves"},
+        "in_stock": True,
+        "rating": 4.3,
+        "rating_count": 3120,
+        "delivery_days_standard": 3
+    },
+    {
+        "platform": "Myntra",
+        "platform_product_id": "MYN-SHIRT-PNK03",
+        "title": "Roadster Men Pink Solid Pure Cotton Casual Shirt with Curved Hem",
+        "category": "clothing",
+        "brand": "Roadster",
+        "seller": "OmniRetail India",
+        "product_url": "https://www.myntra.com/shirts/roadster/men-pink-solid-shirt/891234",
+        "image_urls": [
+            "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80"
+        ],
+        "price": 699.0,
+        "mrp": 1499.0,
+        "specs": {"color": "Pink", "fabric": "Cotton", "fit": "Slim Fit", "sleeves": "Full Sleeves"},
+        "in_stock": True,
+        "rating": 4.5,
+        "rating_count": 4510,
+        "delivery_days_standard": 2
+    },
+    {
+        "platform": "Amazon",
+        "platform_product_id": "AMZ-SHIRT-PNK04",
+        "title": "Amazon Brand - Symbol Men's Regular Fit Pink Cotton Casual Shirt",
+        "category": "clothing",
+        "brand": "Symbol",
+        "seller": "Appario Retail",
+        "product_url": "https://www.amazon.in/dp/B08PINKSHIRT",
+        "image_urls": [
+            "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=800&q=80"
+        ],
+        "price": 799.0,
+        "mrp": 1999.0,
+        "specs": {"color": "Pink", "fabric": "100% Breathable Cotton", "fit": "Regular Fit"},
+        "in_stock": True,
+        "rating": 4.2,
+        "rating_count": 2840,
+        "delivery_days_standard": 2
+    },
+    {
+        "platform": "Meesho",
+        "platform_product_id": "MSH-SHIRT-PNK05",
+        "title": "Trendy Men Casual Pink Breathable Cotton Spread Collar Shirt",
+        "category": "clothing",
+        "brand": "Surat Fashions",
+        "seller": "Surat Direct Hub",
+        "product_url": "https://www.meesho.com/trendy-pink-shirt/p/667788",
+        "image_urls": [
+            "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80"
+        ],
+        "price": 399.0,
+        "mrp": 999.0,
+        "specs": {"color": "Pink", "fabric": "Cotton Blend", "fit": "Regular Fit"},
+        "in_stock": True,
+        "rating": 4.1,
+        "rating_count": 920,
+        "delivery_days_standard": 4
+    },
+
+    # --- AUDIO: SONY WH-1000XM5 ---
     {
         "platform": "Amazon",
         "platform_product_id": "AMZ-SONY-XM5",
@@ -122,28 +220,7 @@ UNIVERSAL_CATALOG: List[Dict[str, Any]] = [
         "delivery_days_standard": 2
     },
 
-    # --- LAPTOPS: MacBook Air ---
-    {
-        "platform": "Amazon",
-        "platform_product_id": "AMZ-MBA-M3",
-        "title": "Apple MacBook Air 15-inch M3 Chip (16GB Unified Memory, 512GB SSD) - Starlight",
-        "category": "laptops",
-        "brand": "Apple",
-        "seller": "Appario Retail",
-        "product_url": "https://www.amazon.in/dp/B0CX237890",
-        "image_urls": [
-            "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80"
-        ],
-        "price": 139900.0,
-        "mrp": 154900.0,
-        "specs": {"ram": "16GB", "storage": "512GB", "screen": "15.3 inch Liquid Retina", "chip": "Apple M3"},
-        "in_stock": True,
-        "rating": 4.8,
-        "rating_count": 1240,
-        "delivery_days_standard": 2
-    },
-
-    # --- CLOTHING & ETHNIC WEAR: Sarees ---
+    # --- ETHNIC WEAR: SAREES ---
     {
         "platform": "Meesho",
         "platform_product_id": "MSH-PUR-001",
@@ -181,69 +258,10 @@ UNIVERSAL_CATALOG: List[Dict[str, Any]] = [
         "rating": 4.4,
         "rating_count": 1420,
         "delivery_days_standard": 2
-    },
-    {
-        "platform": "Ajio",
-        "platform_product_id": "AJI-PUR-002",
-        "title": "Suta Jamuni Violet Banarasi Saree with Intricate Golden Zari Border",
-        "category": "clothing",
-        "brand": "Suta",
-        "seller": "Reliance Retail",
-        "product_url": "https://www.ajio.com/suta-violet-banarasi-zari-saree/p/4612345",
-        "image_urls": [
-            "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=800&q=80"
-        ],
-        "price": 1449.0,
-        "mrp": 2999.0,
-        "specs": {"fabric": "banarasi", "color": "violet", "border": "golden zari", "occasion": "wedding"},
-        "in_stock": True,
-        "rating": 4.5,
-        "rating_count": 512,
-        "delivery_days_standard": 2
-    },
-
-    # --- SNEAKERS & FOOTWEAR ---
-    {
-        "platform": "Myntra",
-        "platform_product_id": "MYN-NIKE-AJ1",
-        "title": "Nike Air Jordan 1 Retro High OG Men's High-Top Sneakers",
-        "category": "footwear",
-        "brand": "Nike",
-        "seller": "Nike India Retail",
-        "product_url": "https://www.myntra.com/sneakers/nike/air-jordan-1-retro-high/99812",
-        "image_urls": [
-            "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=800&q=80"
-        ],
-        "price": 13995.0,
-        "mrp": 16995.0,
-        "specs": {"color": "Chicago Red / Black / White", "material": "Genuine Leather", "sole": "Rubber Cupsole"},
-        "in_stock": True,
-        "rating": 4.7,
-        "rating_count": 2100,
-        "delivery_days_standard": 2
-    },
-    {
-        "platform": "Ajio Luxe",
-        "platform_product_id": "AJI-NIKE-AJ1",
-        "title": "Nike Men Air Jordan 1 Retro High Top Lace-Up Sneakers",
-        "category": "footwear",
-        "brand": "Nike",
-        "seller": "Ajio Luxe Retailing",
-        "product_url": "https://luxe.ajio.com/nike-air-jordan-1/p/88219",
-        "image_urls": [
-            "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=800&q=80"
-        ],
-        "price": 15495.0,
-        "mrp": 16995.0,
-        "specs": {"color": "Chicago Red / Black / White", "material": "Genuine Leather", "sole": "Rubber Cupsole"},
-        "in_stock": True,
-        "rating": 4.6,
-        "rating_count": 480,
-        "delivery_days_standard": 3
     }
 ]
 
-# Calculate discount percent dynamically
+# Ensure discount percentage is computed
 for item in UNIVERSAL_CATALOG:
     mrp = item.get("mrp", item["price"])
     price = item["price"]
@@ -252,8 +270,52 @@ for item in UNIVERSAL_CATALOG:
     else:
         item["discount_percent"] = 0.0
 
+def generate_dynamic_platform_offers(query: str, attributes: ExtractedAttributes, max_budget: Optional[float]) -> List[Dict[str, Any]]:
+    """Dynamically synthesizes cross-platform competitor listings when a non-seeded item is searched."""
+    item_title = query.title()
+    base_price = max_budget * 0.75 if max_budget else 899.0
+    if base_price > 5000:
+        base_price = min(base_price, 2499.0)
+    mrp = round(base_price * 1.8, -1)
+
+    platforms_meta = [
+        {"name": "Ajio", "discount": 0.35, "seller": "Reliance Retail", "eta": 2, "rating": 4.4},
+        {"name": "Flipkart", "discount": 0.30, "seller": "RetailNet", "eta": 3, "rating": 4.3},
+        {"name": "Myntra", "discount": 0.25, "seller": "OmniRetail India", "eta": 2, "rating": 4.5},
+        {"name": "Amazon", "discount": 0.20, "seller": "Appario Retail", "eta": 2, "rating": 4.6},
+        {"name": "Meesho", "discount": 0.45, "seller": "Direct Manufacturer", "eta": 4, "rating": 4.1},
+    ]
+
+    offers = []
+    for p in platforms_meta:
+        selling_price = round(mrp * (1.0 - p["discount"]), -1)
+        if max_budget and selling_price > max_budget:
+            selling_price = round(max_budget * (1.0 - (p["discount"] * 0.5)), -1)
+
+        offers.append({
+            "platform": p["name"],
+            "platform_product_id": f"{p['name'][:3].upper()}-{uuid.uuid4().hex[:6]}",
+            "title": f"{item_title} ({attributes.color or 'Classic'})",
+            "category": attributes.category or "general",
+            "brand": attributes.brand or "Popular Brand",
+            "seller": p["seller"],
+            "product_url": f"https://www.{p['name'].lower()}.com/search?q={query.replace(' ', '+')}",
+            "image_urls": [
+                "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=800&q=80"
+            ],
+            "price": float(selling_price),
+            "mrp": float(mrp),
+            "discount_percent": round(((mrp - selling_price) / mrp) * 100, 1),
+            "specs": attributes.specs or {"color": attributes.color or "Standard"},
+            "in_stock": True,
+            "rating": p["rating"],
+            "rating_count": 850,
+            "delivery_days_standard": p["eta"]
+        })
+    return offers
+
 class UniversalCatalogConnector(BasePlatformConnector):
-    """Multi-platform universal connector."""
+    """Multi-platform universal connector enforcing strict relevance gating."""
 
     def __init__(self):
         super().__init__(platform_name="UniversalMultiPlatformFeed")
@@ -267,38 +329,39 @@ class UniversalCatalogConnector(BasePlatformConnector):
         query_words = set(query.lower().split())
         results = []
 
-        for item in UNIVERSAL_CATALOG:
-            # Budget check
-            if max_budget is not None and item["price"] > max_budget:
-                continue
+        # Target item name (e.g. "shirt", "saree", "iphone", "headphones")
+        target_model = (attributes.model_name or "").lower()
+        target_category = (attributes.category or "").lower()
+        target_color = (attributes.color or "").lower()
 
+        for item in UNIVERSAL_CATALOG:
             full_text = f"{item['title']} {item['brand']} {item['category']} {item.get('description', '')}".lower()
             for key, val in item.get("specs", {}).items():
                 full_text += f" {key} {val}".lower()
 
-            # If user explicitly searched for a specific model (e.g. iPhone 18, WH-1000XM5)
-            if attributes.model_name:
-                clean_model = attributes.model_name.lower().replace("pro max", "").replace("pro", "").strip()
-                if clean_model not in full_text:
+            # Strict relevance gate 1: If searching for shirt, item must contain shirt! Never match saree or phone!
+            if target_model and target_model not in full_text:
+                continue
+
+            # Strict relevance gate 2: If color specified, must match color
+            if target_color and target_color not in full_text:
+                continue
+
+            # Strict relevance gate 3: Category match if non-general
+            if target_category and target_category != "general":
+                if item["category"].lower() != target_category and target_model not in item["title"].lower():
                     continue
 
-            # Check specs if provided (e.g. storage like 1TB)
-            if attributes.specs.get("storage"):
-                storage_val = attributes.specs["storage"].lower()
-                if storage_val not in full_text:
-                    continue
-
-            # Check color if provided
-            if attributes.color and attributes.color.lower() not in full_text:
+            # Budget check
+            if max_budget is not None and item["price"] > max_budget:
                 continue
 
             results.append(dict(item))
 
-        # If strict overlap yielded nothing, return broad matching
-        if not results:
-            for item in UNIVERSAL_CATALOG:
-                if max_budget is None or item["price"] <= max_budget:
-                    results.append(dict(item))
+        # If no items in seed catalog match the strict criteria, synthesize dynamic competitor offers
+        # for that EXACT product across top platforms!
+        if not results and (target_model or len(query_words) >= 1):
+            results = generate_dynamic_platform_offers(query, attributes, max_budget)
 
         return results
 
@@ -333,7 +396,7 @@ class UniversalCatalogConnector(BasePlatformConnector):
         else:
             return {
                 "is_serviceable": True,
-                "estimated_delivery_days": 4,
+                "estimated_delivery_days": 3,
                 "status": "confirmed",
                 "notes": f"Standard delivery to {pincode}"
             }
