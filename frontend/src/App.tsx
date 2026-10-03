@@ -1,34 +1,68 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Mic, MicOff, Truck, Star, ExternalLink, Sparkles, TrendingDown } from 'lucide-react';
+import { Search, Mic, MicOff, Truck, Star, ExternalLink, Sparkles, TrendingDown, MapPin, User, ArrowRight, Edit2 } from 'lucide-react';
 import { SearchResponse, ProductOut } from './types';
 
 const API_BASE = "http://localhost:8000/api/v1";
 
-const PRESET_QUERIES = [
-  "iPhone 18 1TB",
-  "mujhe sabse sasta iPhone 18 1TB chahiye",
-  "Sony WH-1000XM5",
-  "purple saree with golden border under 1500",
-  "Nike Air Jordan 1"
-];
-
 export default function App() {
-  const [query, setQuery] = useState("iPhone 18 1TB");
+  // Step 1: User Profile & Location first
+  const [userName, setUserName] = useState<string>("");
+  const [pincode, setPincode] = useState<string>("");
+  const [isConfigured, setIsConfigured] = useState<boolean>(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  // Step 2: Main Search State
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [response, setResponse] = useState<SearchResponse | null>(null);
   const [isListening, setIsListening] = useState(false);
+
+  // Load saved user info from localStorage if available
+  useEffect(() => {
+    const savedName = localStorage.getItem("easypezy_user_name");
+    const savedPin = localStorage.getItem("easypezy_pincode");
+    if (savedName && savedPin) {
+      setUserName(savedName);
+      setPincode(savedPin);
+      setIsConfigured(true);
+    }
+  }, []);
+
+  const handleProfileSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userName.trim()) {
+      setProfileError("Please enter your name");
+      return;
+    }
+    if (!pincode.trim() || pincode.trim().length !== 6 || !/^\d+$/.test(pincode.trim())) {
+      setProfileError("Please enter a valid 6-digit delivery pincode");
+      return;
+    }
+
+    setProfileError(null);
+    localStorage.setItem("easypezy_user_name", userName.trim());
+    localStorage.setItem("easypezy_pincode", pincode.trim());
+    setIsConfigured(true);
+  };
+
+  const handleEditProfile = () => {
+    setIsConfigured(false);
+  };
 
   const executeSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
     setLoading(true);
-    setError(null);
+    setSearchError(null);
 
     try {
       const res = await fetch(`${API_BASE}/search`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: searchQuery }),
+        body: JSON.stringify({
+          query: searchQuery,
+          pincode: pincode.trim() || undefined
+        }),
       });
 
       if (!res.ok) {
@@ -38,15 +72,11 @@ export default function App() {
       const data: SearchResponse = await res.json();
       setResponse(data);
     } catch (err: any) {
-      setError(err.message || "Failed to execute search. Make sure backend is running on port 8000.");
+      setSearchError(err.message || "Failed to execute search. Make sure backend is running on port 8000.");
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    executeSearch(query);
-  }, []);
 
   const handleVoiceToggle = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -81,67 +111,218 @@ export default function App() {
     }
   };
 
+  // View 1: Name and Location / Pincode Section First
+  if (!isConfigured) {
+    return (
+      <div style={{ maxWidth: '480px', margin: '80px auto 40px auto', padding: '0 16px' }}>
+        <div style={{
+          background: '#2B124C',
+          border: '1px solid #522B5B',
+          borderRadius: '16px',
+          padding: '32px 24px',
+          boxShadow: 'none'
+        }}>
+          <div style={{ marginBottom: '24px', textAlign: 'center' }}>
+            <h1 style={{ fontSize: '26px', fontWeight: 800, color: '#FBE4D8', letterSpacing: '-0.02em' }}>
+              EasyPezy
+            </h1>
+            <p style={{ color: '#DFB6B2', fontSize: '14px', marginTop: '6px' }}>
+              Enter your details to calculate delivery timelines and compare prices across platforms.
+            </p>
+          </div>
+
+          {profileError && (
+            <div style={{
+              background: '#522B5B',
+              border: '1px solid #854F6C',
+              color: '#FBE4D8',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              marginBottom: '18px'
+            }}>
+              {profileError}
+            </div>
+          )}
+
+          <form onSubmit={handleProfileSubmit}>
+            <div style={{ marginBottom: '18px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#DFB6B2', marginBottom: '8px' }}>
+                Your Name
+              </label>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                background: '#190019',
+                border: '1px solid #522B5B',
+                borderRadius: '10px',
+                padding: '10px 14px'
+              }}>
+                <User size={18} color="#DFB6B2" style={{ marginRight: '10px' }} />
+                <input
+                  type="text"
+                  value={userName}
+                  onChange={(e) => setUserName(e.target.value)}
+                  placeholder="Enter full name"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: '#FBE4D8',
+                    fontSize: '15px',
+                    width: '100%'
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#DFB6B2', marginBottom: '8px' }}>
+                Delivery Pincode / Location
+              </label>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                background: '#190019',
+                border: '1px solid #522B5B',
+                borderRadius: '10px',
+                padding: '10px 14px'
+              }}>
+                <MapPin size={18} color="#DFB6B2" style={{ marginRight: '10px' }} />
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value)}
+                  placeholder="Enter 6-digit Indian PIN code (e.g. 560034)"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    color: '#FBE4D8',
+                    fontSize: '15px',
+                    width: '100%'
+                  }}
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              style={{
+                width: '100%',
+                background: '#854F6C',
+                color: '#FBE4D8',
+                border: '1px solid #DFB6B2',
+                borderRadius: '10px',
+                padding: '12px 18px',
+                fontSize: '15px',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              <span>Continue to Search</span>
+              <ArrowRight size={18} />
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // View 2: Main Search Page
   return (
-    <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '32px 16px' }}>
-      {/* Header */}
-      <header style={{ marginBottom: '28px', borderBottom: '1px solid #522B5B', paddingBottom: '24px' }}>
+    <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '24px 16px' }}>
+      {/* Top Header & User Info Bar */}
+      <header style={{ marginBottom: '24px', borderBottom: '1px solid #522B5B', paddingBottom: '18px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <h1 style={{ fontSize: '28px', fontWeight: 800, letterSpacing: '-0.02em', color: '#FBE4D8' }}>
+              <h1 style={{ fontSize: '26px', fontWeight: 800, letterSpacing: '-0.02em', color: '#FBE4D8' }}>
                 EasyPezy
               </h1>
               <span style={{
                 fontSize: '11px',
                 fontWeight: 700,
-                padding: '4px 10px',
-                borderRadius: '999px',
+                padding: '3px 8px',
+                borderRadius: '6px',
                 background: '#522B5B',
                 color: '#FBE4D8',
-                letterSpacing: '0.06em',
+                letterSpacing: '0.05em',
                 textTransform: 'uppercase',
                 border: '1px solid #854F6C'
               }}>
                 Universal Deal Finder
               </span>
             </div>
-            <p style={{ color: '#DFB6B2', fontSize: '14px', marginTop: '6px' }}>
-              Search anything online across all platforms in any language. Find the highest discount and best price instantly.
-            </p>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <span style={{
-              fontSize: '12px',
-              padding: '6px 14px',
-              borderRadius: '999px',
-              background: '#2B124C',
-              border: '1px solid #522B5B',
-              color: '#DFB6B2'
-            }}>
-              Multilingual NLP • Cross-Platform Aggregation
-            </span>
+
+          {/* Active User and Delivery Location display with Edit Button */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            background: '#2B124C',
+            border: '1px solid #522B5B',
+            borderRadius: '10px',
+            padding: '8px 14px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <User size={15} color="#DFB6B2" />
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#FBE4D8' }}>
+                {userName}
+              </span>
+            </div>
+            <span style={{ color: '#522B5B' }}>|</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <MapPin size={15} color="#DFB6B2" />
+              <span style={{ fontSize: '13px', color: '#DFB6B2' }}>
+                PIN: <strong style={{ color: '#FBE4D8' }}>{pincode}</strong>
+              </span>
+            </div>
+            <button
+              onClick={handleEditProfile}
+              title="Change user or delivery location"
+              style={{
+                marginLeft: '6px',
+                padding: '4px 8px',
+                background: '#522B5B',
+                border: '1px solid #854F6C',
+                borderRadius: '6px',
+                color: '#FBE4D8',
+                fontSize: '11px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <Edit2 size={12} />
+              <span>Change</span>
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Search Input Bar */}
+      {/* Main Search Input */}
       <section style={{ marginBottom: '24px' }}>
         <form onSubmit={(e) => { e.preventDefault(); executeSearch(query); }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             background: '#2B124C',
-            border: '1px solid #854F6C',
-            borderRadius: '16px',
-            padding: '10px 14px',
-            boxShadow: '0 8px 30px rgba(25, 0, 25, 0.6)'
+            border: '1px solid #522B5B',
+            borderRadius: '12px',
+            padding: '8px 12px'
           }}>
             <Search size={20} color="#DFB6B2" style={{ marginRight: '10px' }} />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search gadgets, clothing, appliances in any language (e.g. iPhone 18 1TB, sabse sasta iPhone)"
+              placeholder="Search gadgets, clothing, or appliances (e.g. iPhone 18 1TB, Sony WH-1000XM5)"
               style={{
                 flex: 1,
                 background: 'transparent',
@@ -154,13 +335,13 @@ export default function App() {
             <button
               type="button"
               onClick={handleVoiceToggle}
-              title="Voice Search (Speak in any language)"
+              title="Voice Search"
               style={{
-                padding: '9px',
-                borderRadius: '10px',
-                background: isListening ? '#854F6C' : 'rgba(223, 182, 178, 0.12)',
+                padding: '8px',
+                borderRadius: '8px',
+                background: isListening ? '#854F6C' : '#190019',
                 color: '#FBE4D8',
-                marginRight: '10px',
+                marginRight: '8px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -177,77 +358,53 @@ export default function App() {
                 color: '#FBE4D8',
                 fontWeight: 700,
                 fontSize: '14px',
-                padding: '10px 22px',
-                borderRadius: '10px',
-                border: '1px solid #DFB6B2',
-                transition: 'background 0.2s'
+                padding: '10px 20px',
+                borderRadius: '8px',
+                border: '1px solid #DFB6B2'
               }}
             >
-              {loading ? "Searching..." : "Compare Deals"}
+              {loading ? "Searching..." : "Search Deals"}
             </button>
           </div>
         </form>
-
-        {/* Preset query chips */}
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '14px' }}>
-          <span style={{ fontSize: '12px', color: '#DFB6B2', alignSelf: 'center' }}>Try queries:</span>
-          {PRESET_QUERIES.map((q) => (
-            <button
-              key={q}
-              onClick={() => { setQuery(q); executeSearch(q); }}
-              style={{
-                fontSize: '12px',
-                padding: '5px 12px',
-                borderRadius: '999px',
-                background: '#2B124C',
-                border: '1px solid #522B5B',
-                color: '#FBE4D8',
-                transition: 'border-color 0.15s, background 0.15s'
-              }}
-            >
-              {q}
-            </button>
-          ))}
-        </div>
       </section>
 
       {/* Error Banner */}
-      {error && (
+      {searchError && (
         <div style={{
           padding: '12px 16px',
-          background: 'rgba(133, 79, 108, 0.25)',
+          background: '#522B5B',
           border: '1px solid #854F6C',
-          borderRadius: '10px',
+          borderRadius: '8px',
           marginBottom: '20px',
           color: '#FBE4D8',
           fontSize: '14px'
         }}>
-          {error}
+          {searchError}
         </div>
       )}
 
-      {/* Best Deal Comparison Banner */}
+      {/* Static Best Deal Comparison Banner */}
       {response && response.deal_comparison && (
         <div style={{
-          background: 'linear-gradient(135deg, #2B124C 0%, #522B5B 100%)',
-          border: '1px solid #DFB6B2',
-          borderRadius: '16px',
-          padding: '18px 22px',
-          marginBottom: '24px',
+          background: '#2B124C',
+          border: '1px solid #854F6C',
+          borderRadius: '12px',
+          padding: '16px 20px',
+          marginBottom: '22px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '14px',
-          boxShadow: '0 6px 25px rgba(25, 0, 25, 0.4)'
+          gap: '12px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '10px',
-              background: '#854F6C',
-              border: '1px solid #DFB6B2',
+              width: '40px',
+              height: '40px',
+              borderRadius: '8px',
+              background: '#522B5B',
+              border: '1px solid #854F6C',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -256,23 +413,23 @@ export default function App() {
               <TrendingDown size={22} />
             </div>
             <div>
-              <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#DFB6B2', fontWeight: 700 }}>
-                Cross-Platform Price Alert
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#DFB6B2', fontWeight: 700 }}>
+                Cross-Platform Price Summary
               </span>
-              <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#FBE4D8' }}>
+              <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#FBE4D8' }}>
                 Lowest price on {response.deal_comparison.lowest_platform} at Rs. {response.deal_comparison.lowest_price.toLocaleString()}
               </h3>
               <p style={{ fontSize: '13px', color: '#DFB6B2' }}>
-                Found across {response.deal_comparison.total_sellers_found} platforms. You save Rs. {response.deal_comparison.max_savings.toLocaleString()} compared to highest seller.
+                Found across {response.deal_comparison.total_sellers_found} platforms for pincode {pincode}.
               </p>
             </div>
           </div>
           <div>
             <span style={{
               fontSize: '13px',
-              padding: '8px 16px',
-              borderRadius: '999px',
-              background: '#FBE4D8',
+              padding: '6px 14px',
+              borderRadius: '6px',
+              background: '#DFB6B2',
               color: '#190019',
               fontWeight: 800,
               display: 'inline-block'
@@ -288,17 +445,17 @@ export default function App() {
         <section style={{
           background: '#2B124C',
           border: '1px solid #522B5B',
-          borderRadius: '12px',
-          padding: '14px 18px',
-          marginBottom: '24px'
+          borderRadius: '10px',
+          padding: '12px 16px',
+          marginBottom: '22px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
-            <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#DFB6B2' }}>
-              Extracted Parameters
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#DFB6B2' }}>
+              Detected Attributes
             </span>
-            <div style={{ display: 'flex', gap: '14px', fontSize: '12px', color: '#DFB6B2' }}>
+            <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#DFB6B2' }}>
               <span>Language: <strong style={{ color: '#FBE4D8' }}>{response.parsed_query.detected_language.toUpperCase()}</strong></span>
-              <span>Clean phrase: <strong style={{ color: '#FBE4D8' }}>"{response.parsed_query.clean_search_phrase}"</strong></span>
+              <span>Search phrase: <strong style={{ color: '#FBE4D8' }}>"{response.parsed_query.clean_search_phrase}"</strong></span>
             </div>
           </div>
 
@@ -323,25 +480,18 @@ export default function App() {
                 {k}: <strong style={{ marginLeft: '4px', color: '#FBE4D8' }}>{String(v)}</strong>
               </span>
             ))}
-            {response.parsed_query.budget_max && (
-              <span style={badgeStyle}>
-                Max Budget: <strong style={{ marginLeft: '4px', color: '#FBE4D8' }}>Rs. {response.parsed_query.budget_max.toLocaleString()}</strong>
-              </span>
-            )}
-            {response.parsed_query.pincode && (
-              <span style={badgeStyle}>
-                Pincode: <strong style={{ marginLeft: '4px', color: '#FBE4D8' }}>{response.parsed_query.pincode}</strong>
-              </span>
-            )}
+            <span style={badgeStyle}>
+              Delivering to: <strong style={{ marginLeft: '4px', color: '#FBE4D8' }}>{pincode}</strong>
+            </span>
           </div>
         </section>
       )}
 
       {/* Results Header */}
       {response && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-          <h2 style={{ fontSize: '19px', fontWeight: 800, color: '#FBE4D8' }}>
-            Platforms Selling This Item ({response.total_found})
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 800, color: '#FBE4D8' }}>
+            Available Platforms ({response.total_found})
           </h2>
           <span style={{ fontSize: '13px', color: '#DFB6B2' }}>
             Ranked by lowest price & maximum discount
@@ -354,20 +504,19 @@ export default function App() {
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
-          gap: '22px'
+          gap: '20px'
         }}>
           {response.results.map((product) => (
             <div
               key={`${product.platform}-${product.id}`}
               style={{
                 background: '#2B124C',
-                border: product.is_best_deal ? '2px solid #DFB6B2' : '1px solid #522B5B',
-                borderRadius: '16px',
+                border: product.is_best_deal ? '1px solid #DFB6B2' : '1px solid #522B5B',
+                borderRadius: '12px',
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
-                position: 'relative',
-                boxShadow: product.is_best_deal ? '0 8px 30px rgba(133, 79, 108, 0.35)' : 'none'
+                position: 'relative'
               }}
             >
               {/* Best Deal Flag Header */}
@@ -377,8 +526,8 @@ export default function App() {
                   color: '#190019',
                   fontSize: '11px',
                   fontWeight: 900,
-                  letterSpacing: '0.06em',
-                  padding: '5px 14px',
+                  letterSpacing: '0.05em',
+                  padding: '5px 12px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between'
@@ -391,7 +540,7 @@ export default function App() {
               )}
 
               {/* Product Image */}
-              <div style={{ position: 'relative', height: '230px', background: '#190019' }}>
+              <div style={{ position: 'relative', height: '220px', background: '#190019' }}>
                 <img
                   src={product.image_urls[0] || 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=800&q=80'}
                   alt={product.title}
@@ -400,13 +549,12 @@ export default function App() {
                 {/* Platform Tag */}
                 <span style={{
                   position: 'absolute',
-                  top: '12px',
-                  left: '12px',
-                  padding: '4px 10px',
-                  background: 'rgba(25, 0, 25, 0.92)',
-                  backdropFilter: 'blur(4px)',
-                  borderRadius: '6px',
-                  fontSize: '12px',
+                  top: '10px',
+                  left: '10px',
+                  padding: '4px 8px',
+                  background: '#190019',
+                  borderRadius: '4px',
+                  fontSize: '11px',
                   fontWeight: 700,
                   color: '#FBE4D8',
                   border: '1px solid #522B5B'
@@ -417,12 +565,12 @@ export default function App() {
                 {product.discount_percent > 0 && (
                   <span style={{
                     position: 'absolute',
-                    top: '12px',
-                    right: '12px',
-                    padding: '4px 8px',
+                    top: '10px',
+                    right: '10px',
+                    padding: '3px 6px',
                     background: '#854F6C',
                     border: '1px solid #DFB6B2',
-                    borderRadius: '6px',
+                    borderRadius: '4px',
                     fontSize: '11px',
                     fontWeight: 800,
                     color: '#FBE4D8'
@@ -433,7 +581,7 @@ export default function App() {
               </div>
 
               {/* Details */}
-              <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+              <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '8px' }}>
                   <span style={{ fontSize: '12px', color: '#DFB6B2', fontWeight: 600 }}>
                     Seller: {product.seller || product.brand}
@@ -461,7 +609,7 @@ export default function App() {
 
                 {/* Price Display */}
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '12px' }}>
-                  <span style={{ fontSize: '20px', fontWeight: 800, color: '#FBE4D8' }}>
+                  <span style={{ fontSize: '19px', fontWeight: 800, color: '#FBE4D8' }}>
                     Rs. {product.price.toLocaleString()}
                   </span>
                   {product.mrp && product.mrp > product.price && (
@@ -479,11 +627,11 @@ export default function App() {
                         key={key}
                         style={{
                           fontSize: '11px',
-                          padding: '3px 8px',
-                          background: '#522B5B',
-                          borderRadius: '6px',
+                          padding: '2px 6px',
+                          background: '#190019',
+                          borderRadius: '4px',
                           color: '#FBE4D8',
-                          border: '1px solid #854F6C'
+                          border: '1px solid #522B5B'
                         }}
                       >
                         {key}: <strong>{String(val)}</strong>
@@ -498,24 +646,24 @@ export default function App() {
                   alignItems: 'center',
                   gap: '6px',
                   padding: '6px 10px',
-                  background: 'rgba(25, 0, 25, 0.4)',
+                  background: '#190019',
                   border: '1px solid #522B5B',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   fontSize: '12px',
                   marginBottom: '12px',
                   color: '#DFB6B2'
                 }}>
                   <Truck size={14} color="#DFB6B2" />
                   <span>
-                    Delivery: <strong style={{ color: '#FBE4D8' }}>{product.estimated_delivery_days} days</strong> ({product.delivery_status})
+                    Delivery to {pincode}: <strong style={{ color: '#FBE4D8' }}>{product.estimated_delivery_days} days</strong> ({product.delivery_status})
                   </span>
                 </div>
 
                 {/* Why This Matched Box */}
                 <div style={{
-                  background: product.is_best_deal ? 'rgba(223, 182, 178, 0.12)' : 'rgba(82, 43, 91, 0.35)',
-                  border: product.is_best_deal ? '1px solid #DFB6B2' : '1px solid #522B5B',
-                  borderRadius: '10px',
+                  background: '#190019',
+                  border: '1px solid #522B5B',
+                  borderRadius: '8px',
                   padding: '10px 12px',
                   fontSize: '12px',
                   color: '#FBE4D8',
@@ -539,15 +687,14 @@ export default function App() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '6px',
-                    padding: '11px',
-                    borderRadius: '10px',
+                    padding: '10px',
+                    borderRadius: '8px',
                     background: product.is_best_deal ? '#DFB6B2' : '#522B5B',
                     border: '1px solid #854F6C',
                     color: product.is_best_deal ? '#190019' : '#FBE4D8',
                     fontSize: '13px',
                     fontWeight: 800,
-                    textAlign: 'center',
-                    transition: 'opacity 0.15s'
+                    textAlign: 'center'
                   }}
                 >
                   <span>Buy on {product.platform}</span>
@@ -562,11 +709,11 @@ export default function App() {
           textAlign: 'center',
           padding: '48px 16px',
           background: '#2B124C',
-          borderRadius: '16px',
+          borderRadius: '12px',
           border: '1px solid #522B5B'
         }}>
           <p style={{ color: '#DFB6B2', fontSize: '15px' }}>
-            No platforms found for this item with the current filters.
+            No platforms found for this item with the current delivery location and filters.
           </p>
         </div>
       ) : null}
@@ -577,8 +724,8 @@ export default function App() {
 const badgeStyle: React.CSSProperties = {
   fontSize: '12px',
   padding: '4px 10px',
-  borderRadius: '999px',
-  background: '#522B5B',
-  border: '1px solid #854F6C',
+  borderRadius: '6px',
+  background: '#190019',
+  border: '1px solid #522B5B',
   color: '#DFB6B2'
 };
