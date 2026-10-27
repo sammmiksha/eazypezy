@@ -156,3 +156,4 @@ When Docker Desktop daemon is started:
 ```bash
 docker compose up -d
 ```
+"# eazypezy" 
