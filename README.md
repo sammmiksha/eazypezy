@@ -1,6 +1,6 @@
-# EasyPezy: Multilingual Saree & Ethnic Wear Search Engine
+# EasyPezy: Requirement-Aware Product Search
 
-AI-powered vertical search engine for Indian ethnic wear that parses natural language and voice queries, extracts fine-grained fashion and logistical attributes, applies hard filters (budget, stock, delivery SLA), and ranks cross-platform results with transparent match explanations.
+EasyPezy is a product-agnostic shopping search engine. A customer can describe any item in natural language — for example, “5G phone under ₹40,000 with the best screen”, “ergonomic office chair below ₹15,000”, or “quiet 8 kg washing machine” — and receive a ranked cross-store shortlist with an explanation of why each offer fits.
 
 ---
 
@@ -86,17 +86,12 @@ easypezy/
 
 ## Key Modules
 
-### 1. Attribute Extraction (`services/parser/extractor.py`)
-Extracts structured saree attributes:
-- `primary_color` (e.g. purple, magenta, red, yellow)
-- `border_type` (zari, temple, contrast, embroidered)
-- `zari_type` (golden, silver, copper, antique)
-- `finish` (matte, glossy, sheer)
-- `fabric` (silk, kanjivaram, banarasi, georgette, chiffon)
-- `budget_max` / `budget_min` (INR)
-- `deadline_days` (e.g. within 2 days)
-- `pincode` (6-digit Indian PIN)
-- `clarifications_needed` (triggered when budget or terms are ambiguous)
+### 1. Requirement extraction (`services/parser/requirements_parser.py`)
+Separates the request into:
+
+- hard requirements, such as 5G, storage, RAM, display technology, refresh rate, price ceiling, and delivery deadline;
+- ranking preferences, such as the best display, camera, battery, performance, or rating;
+- a category-agnostic source query, so a live shopping provider receives the customer’s complete request even for a category not represented in the demo data.
 
 ### 2. Platform Connectors (`services/connectors/base.py`)
 `BasePlatformConnector` interface requires:
@@ -109,11 +104,25 @@ Implemented by `MockCatalogConnector` simulating Myntra, Ajio, Amazon, and Meesh
 - Filters out items that cannot arrive before the specified deadline.
 - Marks fulfillment confidence (`confirmed`, `estimated`, or `unverified`).
 
-### 4. Multi-Factor Ranker (`services/ranker/scorer.py`)
-- Weighted attribute matching: color match (+35%), border/zari match (+25%), fabric match (+20%).
-- Budget fit and savings calculation.
-- Rating and delivery speed bonuses.
-- Generates transparent `why_matched` explanations (e.g., *"Matches requested Purple color • Features Golden zari border • Rs. 1,299 is Rs. 201 below your Rs. 1,500 budget • Highly rated (4.3) • Express 2-day delivery"*).
+### 4. Requirement-aware ranker (`services/ranker/requirement_ranker.py`)
+- filters every hard requirement before ranking;
+- weights the customer’s explicit preferences, then value, seller rating, and delivery;
+- produces a fit score and plain-language explanation for every recommendation.
+
+## Live product data
+
+The repository ships with a clearly labelled demo catalog for predictable local development. It does **not** scrape retailer pages or pretend demo prices are live.
+
+For product-agnostic production search, configure an approved shopping-search or affiliate-feed provider. A SerpApi-compatible Google Shopping connector is included and can search across categories from the full natural-language request:
+
+```dotenv
+# backend/.env
+SERPAPI_API_KEY=your-provider-key
+# optional: defaults to https://serpapi.com/search.json
+SERPAPI_ENDPOINT=https://serpapi.com/search.json
+```
+
+With the key set, API responses return `data_source: "live_shopping_api"`. Without it, results return `data_source: "demo_catalog"`, which the UI displays prominently.
 
 ---
 

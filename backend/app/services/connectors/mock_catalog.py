@@ -83,6 +83,110 @@ UNIVERSAL_CATALOG: List[Dict[str, Any]] = [
         "delivery_days_standard": 2
     },
 
+    # --- SMARTPHONES: budget 5G choices with comparable display data ---
+    {
+        "platform": "Amazon",
+        "platform_product_id": "AMZ-OP13R-5G",
+        "title": "OnePlus 13R 5G (Astral Trail, 12GB RAM, 256GB Storage)",
+        "category": "smartphones",
+        "brand": "OnePlus",
+        "seller": "Appario Retail",
+        "product_url": "https://www.amazon.in/s?k=OnePlus+13R+5G",
+        "image_urls": ["https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=85"],
+        "price": 38999.0,
+        "mrp": 45999.0,
+        "specs": {"network": "5G", "display": "6.78-inch LTPO AMOLED", "refresh_rate_hz": 120, "display_score": 96, "ram": "12GB", "storage": "256GB", "battery": "6000mAh", "camera": "50MP"},
+        "in_stock": True,
+        "rating": 4.6,
+        "rating_count": 3290,
+        "delivery_days_standard": 1
+    },
+    {
+        "platform": "Croma",
+        "platform_product_id": "CRM-OP13R-5G",
+        "title": "OnePlus 13R 5G (12GB RAM, 256GB, Astral Trail)",
+        "category": "smartphones",
+        "brand": "OnePlus",
+        "seller": "Infiniti Retail",
+        "product_url": "https://www.croma.com/searchB?q=OnePlus%2013R%205G%3Arelevance",
+        "image_urls": ["https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=85"],
+        "price": 39999.0,
+        "mrp": 45999.0,
+        "specs": {"network": "5G", "display": "6.78-inch LTPO AMOLED", "refresh_rate_hz": 120, "display_score": 96, "ram": "12GB", "storage": "256GB", "battery": "6000mAh", "camera": "50MP"},
+        "in_stock": True,
+        "rating": 4.6,
+        "rating_count": 1170,
+        "delivery_days_standard": 2
+    },
+    {
+        "platform": "Flipkart",
+        "platform_product_id": "FLK-S24FE-5G",
+        "title": "Samsung Galaxy S24 FE 5G (Graphite, 8GB RAM, 128GB Storage)",
+        "category": "smartphones",
+        "brand": "Samsung",
+        "seller": "SuperComNet",
+        "product_url": "https://www.flipkart.com/search?q=samsung+galaxy+s24+fe+5g",
+        "image_urls": ["https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=900&q=85"],
+        "price": 37999.0,
+        "mrp": 59999.0,
+        "specs": {"network": "5G", "display": "6.7-inch Dynamic AMOLED 2X", "refresh_rate_hz": 120, "display_score": 92, "ram": "8GB", "storage": "128GB", "battery": "4700mAh", "camera": "50MP"},
+        "in_stock": True,
+        "rating": 4.5,
+        "rating_count": 6140,
+        "delivery_days_standard": 2
+    },
+    {
+        "platform": "Flipkart",
+        "platform_product_id": "FLK-NORD5-5G",
+        "title": "OnePlus Nord 5 5G (Marble Sands, 8GB RAM, 256GB Storage)",
+        "category": "smartphones",
+        "brand": "OnePlus",
+        "seller": "RetailNet",
+        "product_url": "https://www.flipkart.com/search?q=oneplus+nord+5+5g",
+        "image_urls": ["https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=900&q=85"],
+        "price": 32999.0,
+        "mrp": 36999.0,
+        "specs": {"network": "5G", "display": "6.83-inch AMOLED", "refresh_rate_hz": 144, "display_score": 88, "ram": "8GB", "storage": "256GB", "battery": "6800mAh", "camera": "50MP"},
+        "in_stock": True,
+        "rating": 4.4,
+        "rating_count": 2940,
+        "delivery_days_standard": 2
+    },
+    {
+        "platform": "Reliance Digital",
+        "platform_product_id": "REL-NTHING-3AP-5G",
+        "title": "Nothing Phone (3a) Pro 5G (12GB RAM, 256GB Storage)",
+        "category": "smartphones",
+        "brand": "Nothing",
+        "seller": "Reliance Retail Ltd",
+        "product_url": "https://www.reliancedigital.in/search?q=Nothing%20Phone%203a%20Pro%205G",
+        "image_urls": ["https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=900&q=85"],
+        "price": 35999.0,
+        "mrp": 37999.0,
+        "specs": {"network": "5G", "display": "6.77-inch Flexible AMOLED", "refresh_rate_hz": 120, "display_score": 89, "ram": "12GB", "storage": "256GB", "battery": "5000mAh", "camera": "50MP periscope"},
+        "in_stock": True,
+        "rating": 4.4,
+        "rating_count": 840,
+        "delivery_days_standard": 2
+    },
+    {
+        "platform": "Croma",
+        "platform_product_id": "CRM-PIXEL9A-5G",
+        "title": "Google Pixel 9a 5G (Obsidian, 8GB RAM, 128GB Storage)",
+        "category": "smartphones",
+        "brand": "Google",
+        "seller": "Infiniti Retail",
+        "product_url": "https://www.croma.com/searchB?q=Google%20Pixel%209a%205G%3Arelevance",
+        "image_urls": ["https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=900&q=85"],
+        "price": 39999.0,
+        "mrp": 49999.0,
+        "specs": {"network": "5G", "display": "6.3-inch pOLED", "refresh_rate_hz": 120, "display_score": 90, "ram": "8GB", "storage": "128GB", "battery": "5100mAh", "camera": "48MP"},
+        "in_stock": True,
+        "rating": 4.3,
+        "rating_count": 710,
+        "delivery_days_standard": 1
+    },
+
     # --- CLOTHING: SHIRTS (e.g. Pink Shirts across platforms under 1000) ---
     {
         "platform": "Ajio",
@@ -333,6 +437,7 @@ class UniversalCatalogConnector(BasePlatformConnector):
         target_model = (attributes.model_name or "").lower()
         target_category = (attributes.category or "").lower()
         target_color = (attributes.color or "").lower()
+        target_brand = (attributes.brand or "").lower()
 
         for item in UNIVERSAL_CATALOG:
             full_text = f"{item['title']} {item['brand']} {item['category']} {item.get('description', '')}".lower()
@@ -347,6 +452,10 @@ class UniversalCatalogConnector(BasePlatformConnector):
             if target_color and target_color not in full_text:
                 continue
 
+            # A stated brand is a hard qualifier, not a loose ranking hint.
+            if target_brand and target_brand not in full_text:
+                continue
+
             # Strict relevance gate 3: Category match if non-general
             if target_category and target_category != "general":
                 if item["category"].lower() != target_category and target_model not in item["title"].lower():
@@ -357,11 +466,6 @@ class UniversalCatalogConnector(BasePlatformConnector):
                 continue
 
             results.append(dict(item))
-
-        # If no items in seed catalog match the strict criteria, synthesize dynamic competitor offers
-        # for that EXACT product across top platforms!
-        if not results and (target_model or len(query_words) >= 1):
-            results = generate_dynamic_platform_offers(query, attributes, max_budget)
 
         return results
 

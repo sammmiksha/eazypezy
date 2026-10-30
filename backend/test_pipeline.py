@@ -5,6 +5,9 @@ from app.api.v1.endpoints.search import search_products
 
 async def run_tests():
     queries = [
+        "5G phone, budget 40000, best screen",
+        "ergonomic office chair under 15000",
+        "quiet 8 kg front-load washing machine below 35000",
         "iPhone 18 1TB",
         "mujhe sabse sasta iPhone 18 1TB chahiye",
         "Sony WH-1000XM5",

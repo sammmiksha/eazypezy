@@ -7,6 +7,14 @@ class ExtractedAttributes(BaseModel):
     brand: Optional[str] = Field(None, description="e.g. Apple, Samsung, Sony, Nike, Suta")
     model_name: Optional[str] = Field(None, description="e.g. iPhone 18, WH-1000XM5, Air Jordan")
     specs: Dict[str, Any] = Field(default_factory=dict, description="e.g. {'storage': '1TB', 'ram': '16GB', 'fabric': 'silk'}")
+    required_specs: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Non-negotiable requirements extracted from the query, e.g. {'network': '5G'}"
+    )
+    preferred_specs: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Ranking preferences extracted from the query, e.g. {'display_priority': 'best'}"
+    )
     color: Optional[str] = Field(None, description="e.g. titanium black, purple, midnight blue")
 
 class ParsedSearchRequest(BaseModel):
@@ -54,6 +62,8 @@ class ProductOut(BaseModel):
     delivery_status: str
     match_score: float
     is_best_deal: bool = False
+    requirement_score: float = 0.0
+    requirement_summary: List[str] = Field(default_factory=list)
     price_difference_vs_highest: Optional[float] = None
     why_matched: str
 
@@ -70,3 +80,4 @@ class SearchResponse(BaseModel):
     total_found: int
     deal_comparison: Optional[PlatformDealComparison] = None
     results: List[ProductOut]
+    data_source: str = "demo_catalog"

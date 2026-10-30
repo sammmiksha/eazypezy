@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 from typing import Optional
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "EasyPezy Saree Search"
+    PROJECT_NAME: str = "EasyPezy Product Finder"
     API_V1_STR: str = "/api/v1"
     
     # Database
@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     # LLM keys (optional, fallback parser will activate if not set)
     OPENAI_API_KEY: Optional[str] = None
     GEMINI_API_KEY: Optional[str] = None
+
+    # Optional licensed product-search provider. When unset the application uses
+    # its transparent demo catalog; it never silently scrapes retailer pages.
+    SERPAPI_API_KEY: Optional[str] = None
+    SERPAPI_ENDPOINT: str = "https://serpapi.com/search.json"
     
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"

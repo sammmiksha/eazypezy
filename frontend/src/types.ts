@@ -3,6 +3,8 @@ export interface ExtractedAttributes {
   brand?: string | null;
   model_name?: string | null;
   specs?: Record<string, any>;
+  required_specs?: Record<string, any>;
+  preferred_specs?: Record<string, any>;
   color?: string | null;
 }
 
@@ -43,6 +45,8 @@ export interface ProductOut {
   delivery_status: string;
   match_score: number;
   is_best_deal: boolean;
+  requirement_score: number;
+  requirement_summary: string[];
   price_difference_vs_highest?: number | null;
   why_matched: string;
 }
@@ -61,4 +65,5 @@ export interface SearchResponse {
   total_found: number;
   deal_comparison?: PlatformDealComparison | null;
   results: ProductOut[];
+  data_source: 'demo_catalog' | 'live_shopping_api' | string;
 }
